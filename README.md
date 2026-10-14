@@ -263,7 +263,9 @@ with two services** — same domain, zero CORS configuration:
    `MONGO_URI`, `JWT_SECRET`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`
    (the Razorpay pair is optional — checkout reports "not configured" without it).
 3. Deploy. The frontend calls the API through the `/api/*` rewrite on the same origin,
-   so JWT cookies work with no extra CORS or cookie settings.
+   so JWT cookies work with no extra CORS or cookie settings. The frontend service's
+   built-in SPA rewrite serves `index.html` for deep links, so client-side routes
+   like `/login` or `/orders/:id` survive a hard refresh.
 
 > **Note:** a cloud deployment cannot reach `localhost` — use a MongoDB Atlas URI and
 > allow `0.0.0.0/0` (or Vercel/Render's egress IPs) under Atlas → Network Access.
