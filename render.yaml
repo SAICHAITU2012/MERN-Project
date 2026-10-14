@@ -1,0 +1,24 @@
+# Render Blueprint — deploys ShopKart as a single Node web service.
+# Express serves the REST API (mounted at /api and without the prefix)
+# plus the built React frontend from frontend/dist.
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: shopkart
+    runtime: node
+    plan: free
+    buildCommand: cd backend && npm ci && cd ../frontend && npm ci && npm run build
+    startCommand: cd backend && npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: MONGO_URI
+        sync: false   # entered at deploy time — local or MongoDB Atlas URI
+      - key: JWT_SECRET
+        generateValue: true   # Render generates a strong random secret
+      - key: RAZORPAY_KEY_ID
+        sync: false   # Razorpay test-mode key id (checkout flow only)
+      - key: RAZORPAY_KEY_SECRET
+        sync: false   # Razorpay test-mode key secret

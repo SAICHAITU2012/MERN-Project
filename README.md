@@ -124,7 +124,7 @@ backend/
 │   ├── generateToken.js
 │   ├── seedProducts.js         # npm run seed
 │   └── migrateToAtlas.js       # one-time local → Atlas copy helper
-└── index.js
+└── index.js                    # API + serves frontend/dist in production
 
 frontend/src/
 ├── components/                 # Navbar, ProductCard, WishlistCard, CartItem,
@@ -135,7 +135,14 @@ frontend/src/
 │                               # Orders, OrderDetails
 ├── services/api.js             # axios instance (withCredentials) + all API calls
 └── main.jsx / App.jsx          # routes
+
+render.yaml                      # Render Blueprint — one-service deployment
 ```
+
+In production the backend serves the built frontend, so the app is one process:
+browser navigations (`Accept: text/html`) get the SPA with a fallback to
+`index.html`, while API requests get JSON — both the `/api/*` prefix and the
+bare paths the Vite dev proxy uses stay valid.
 
 ## 🔌 API reference
 
@@ -235,15 +242,30 @@ With **Razorpay test keys** configured, checkout opens the Razorpay test modal.
 Use Razorpay's test payment methods — e.g. card `4111 1111 1111 1111` (any future
 expiry / CVV) or the test UPI `success@razorpay`. No real money moves in test mode.
 
-## 📦 Deployment (optional)
+## 🌍 Deployment
 
-Deployment is not required for this submission, but the app deploys cleanly:
+**Live demo:** _add your Render URL here after the first deploy_
 
-- **Backend** → Render / Railway / Fly.io (set the env vars above in the dashboard)
-- **Database** → MongoDB Atlas free tier (whitelist the host's egress IP)
-- **Frontend** → `npm run build`, host `dist/` on Vercel / Netlify; proxy `/api/*`
-  to the backend (Vercel rewrites / Netlify redirects) or point the axios `baseURL`
-  in `frontend/src/services/api.js` at the backend's public URL
+The repo ships with a [Render Blueprint](render.yaml) that deploys the **whole app as one
+free Node web service** — Express serves the REST API at `/api/*` *and* the built React
+frontend from `frontend/dist`, so there is no CORS setup and no second service to pay for.
+
+### Deploy with the Blueprint (recommended)
+
+1. Push this repo to GitHub (already done — `SAICHAITU2012/MERN-Project`).
+2. On [render.com](https://render.com) → **New +** → **Blueprint** → select the repo.
+   Render reads `render.yaml` and creates the `shopkart` web service.
+3. Fill in the two sync prompts: `MONGO_URI` (your Atlas URI) and the Razorpay test keys.
+4. Deploy. The build runs `npm ci` in both folders, builds the frontend, and starts the backend.
+
+The app is also fully compatible with the classic two-service setup — deploy `backend/`
+to Render/Railway and host the built `frontend/dist` anywhere static, pointing the axios
+`baseURL` in `frontend/src/services/api.js` at the API — but the single-service Blueprint
+is simpler and keeps auth cookies same-origin.
+
+> **Note for local MongoDB users:** a Render instance cannot reach `localhost` — use a
+> MongoDB Atlas URI and whitelist `0.0.0.0/0` (or Render's egress IPs) under Atlas →
+> Network Access.
 
 ## 🔐 Security notes
 
