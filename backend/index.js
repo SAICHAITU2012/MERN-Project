@@ -74,13 +74,29 @@ if (!process.env.VERCEL) {
   });
 }
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("MongoDB connected");
-  })
-  .catch((error) => {
-    console.log("MongoDB connection failed:", error.message);
-  });
+// Connect with retries so a transient network failure or an IP-whitelist
+// change on MongoDB Atlas heals on a running instance instead of leaving
+// every future query timing out for the lifetime of the process.
+const connectWithRetry = async (retries = 5, delayMs = 3000) => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      await mongoose.connect(process.env.MONGO_URI);
+      console.log("MongoDB connected");
+      return;
+    } catch (error) {
+      console.log(
+        `MongoDB connection attempt ${attempt}/${retries} failed: ${error.message}`
+      );
+      if (attempt < retries) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+  }
+  console.log(
+    "MongoDB unreachable after retries — check MONGO_URI and the Atlas IP whitelist"
+  );
+};
+
+connectWithRetry();
 
 export default app;
