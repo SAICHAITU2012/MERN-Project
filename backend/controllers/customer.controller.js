@@ -2,10 +2,12 @@ import bcrypt from "bcrypt";
 import Customer from "../models/customer.model.js";
 import generateToken from "../utils/generateToken.js";
 
+// Secure cookies on HTTPS deployments (Vercel/Render set NODE_ENV=production);
+// plain HTTP localhost stays usable during development.
 const cookieOptions = {
   httpOnly: true,
   sameSite: "lax",
-  secure: false,
+  secure: process.env.NODE_ENV === "production",
   maxAge: 7 * 24 * 60 * 60 * 1000
 };
 
@@ -94,7 +96,7 @@ export const logoutCustomer = (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
     sameSite: "lax",
-    secure: false
+    secure: process.env.NODE_ENV === "production"
   });
 
   return res.status(200).json({

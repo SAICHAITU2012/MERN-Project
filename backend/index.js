@@ -66,9 +66,13 @@ if (hasFrontendBuild) {
   });
 }
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+// Vercel deploys this app as a serverless function by importing the default
+// export — it never binds a port, so listening is skipped there.
+if (!process.env.VERCEL) {
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+}
 
 mongoose
   .connect(process.env.MONGO_URI)
@@ -78,3 +82,5 @@ mongoose
   .catch((error) => {
     console.log("MongoDB connection failed:", error.message);
   });
+
+export default app;
